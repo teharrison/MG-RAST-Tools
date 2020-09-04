@@ -4,7 +4,7 @@ and asyncrhonous requests for the user.'''
 
 from __future__ import print_function
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 import json
 from mglib import async_rest_api, get_auth_token
 
@@ -12,16 +12,18 @@ DEBUG = 0
 
 if __name__ == '__main__':
     usage = "usage: %prog [options]  URI"
-    parser = OptionParser(usage)
-#    parser.add_option("-v", "--verbose", dest="verbose", action="store_true")
-    parser.add_option("-k", "--token", dest="token", type="str",
+    parser = ArgumentParser(usage)
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true")
+    parser.add_argument("-k", "--token", dest="token", type=str,
                       help="Auth token")
+    parser.add_argument("URI", type=str, help="URI to query")
 
-    (opts, args) = parser.parse_args()
+    opts = parser.parse_args()
     key = get_auth_token(opts)
-
+    if opts.verbose:
+        print("KEY = {}".format(key), file=sys.stderr)   
 # assign parameters
-    URI = args[0]
+    URI = opts.URI
 
 # construct API call
     print(URI, file=sys.stderr)
@@ -30,4 +32,7 @@ if __name__ == '__main__':
     jsonstructure = async_rest_api(URI, auth=key)
 
 # unpack and display the data table
-    print(json.dumps(jsonstructure))
+    if type(jsonstructure) == dict:    # If we have data, not json structure
+        print(json.dumps(jsonstructure), file=sys.stdout)
+    else:
+        sys.stdout.write(jsonstructure.decode("utf-8"))
